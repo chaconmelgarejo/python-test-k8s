@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    app: helloworldpy
+  name: mypythonlab
+  namespace: labs
+spec:
+  rules:
+  - host: mypythonlab.labs.10.54.228.72.xip.io
+    http:
+      paths:
+      - backend:
+          serviceName: helloworldpy-service
+          servicePort: py-port
+        path: /
