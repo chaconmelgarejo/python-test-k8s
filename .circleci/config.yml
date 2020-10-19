@@ -1,16 +1,5 @@
-version: 2.1
-
-orbs:
-  python: circleci/python@0.2.1
-
+version: 2
 jobs:
-  check:
-    executor: python/default
-    steps:
-      - checkout
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
   build:
     environment:
       IMAGE_NAME: chaconmelgarejo/python-k8s-lab
@@ -20,56 +9,50 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Build Docker Image
+          name: Build Docker image
           command: |
             docker build -t $IMAGE_NAME:latest .
       - run:
-          name: Archive Docker Image
+          name: Archive Docker image
           command: docker save -o image.tar $IMAGE_NAME
       - persist_to_workspace:
           root: .
           paths:
             - ./image.tar
-  publish-tag:
+  publish-latest:
     environment:
       IMAGE_NAME: chaconmelgarejo/python-k8s-lab
     docker:
       - image: circleci/buildpack-deps:stretch  
-        steps:
-          - attach_workspace:
-            at: /tmp/workspace
-          - setup_remote_docker
-          - run:
-            name: Fetch Version Number
-            command: echo "0.0.${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1:0:7}" | tee version.txt
-          - run:
-            name: Load archived Docker image
-            command: docker load -i /tmp/workspace/image.tar
-          - run:
-            name: Publish Docker Image to Docker Hub
-            command: |
-              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-              docker push $IMAGE_NAME:latest
-              docker tag  $IMAGE_NAME:latest $IMAGE_NAME:$(cat version.txt)
-              docker push $IMAGE_NAME:$(cat version.txt)
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Compute version number
+          command: echo "0.0.${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1:0:7}" | tee version.txt
+      - run:
+          name: Load archived Docker image
+          command: docker load -i /tmp/workspace/image.tar
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push $IMAGE_NAME:latest
+            docker tag  $IMAGE_NAME:latest $IMAGE_NAME:$(cat version.txt)
+            docker push $IMAGE_NAME:$(cat version.txt)
+            
 workflows:
   version: 2
-  build-master:
+  build-main:
     jobs:
-      - check:
-          filters:
-            branches:
-              only: main
       - build:
-          requires:
-            - check
           filters:
             branches:
               only: main
-      - publish-tag:
+      - publish-latest:
           requires:
             - build
           filters:
             branches:
               only: main
-
