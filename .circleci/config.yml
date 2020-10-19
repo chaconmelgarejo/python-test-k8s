@@ -30,7 +30,7 @@ jobs:
           root: .
           paths:
             - ./image.tar
-    publish:
+    publish-tag:
       environment:
         IMAGE_NAME: chaconmelgarejo/python-k8s-lab
       docker:
@@ -67,7 +67,7 @@ workflows:
           filters:
             branches:
               only: main
-      - publish:
+      - publish-tag:
           requires:
             - build
           filters:
