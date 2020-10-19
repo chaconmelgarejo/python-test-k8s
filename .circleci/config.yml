@@ -30,29 +30,28 @@ jobs:
           root: .
           paths:
             - ./image.tar
-    publish-tag:
-      environment:
-        IMAGE_NAME: chaconmelgarejo/python-k8s-lab
-      docker:
-        - image: circleci/buildpack-deps:stretch  
-      steps:
-        - attach_workspace:
-            at: /tmp/workspace
-        - setup_remote_docker
-        - run:
-            name: Fetch Version Number
-            command: echo "0.0.${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1:0:7}" | tee version.txt
-        - run:
-            name: Load archived Docker image
-            command: docker load -i /tmp/workspace/image.tar
-        - run:
-            name: Publish Docker Image to Docker Hub
-            command: |
-              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-              docker push $IMAGE_NAME:latest
-              docker tag  $IMAGE_NAME:latest $IMAGE_NAME:$(cat version.txt)
-              docker push $IMAGE_NAME:$(cat version.txt)
-
+  publish-tag:
+    environment:
+       IMAGE_NAME: chaconmelgarejo/python-k8s-lab
+     docker:
+       - image: circleci/buildpack-deps:stretch  
+     steps:
+       - attach_workspace:
+           at: /tmp/workspace
+       - setup_remote_docker
+       - run:
+           name: Fetch Version Number
+           command: echo "0.0.${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1:0:7}" | tee version.txt
+       - run:
+           name: Load archived Docker image
+           command: docker load -i /tmp/workspace/image.tar
+       - run:
+           name: Publish Docker Image to Docker Hub
+           command: |
+             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+             docker push $IMAGE_NAME:latest
+             docker tag  $IMAGE_NAME:latest $IMAGE_NAME:$(cat version.txt)
+             docker push $IMAGE_NAME:$(cat version.txt)
 workflows:
   version: 2
   build-master:
